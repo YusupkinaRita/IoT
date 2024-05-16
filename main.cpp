@@ -1,28 +1,32 @@
 #include <iostream>
 #include <random>
+#include <tuple>
 
 
 class pattern{
 private:
     double _value;
-
+    int _min;
+    int _max;
 public:
     pattern()=delete;
     pattern( double min, double max){
-        if(static_cast<int>(max)!=0)
+    
         _value=min+rand()%static_cast<int>(max);
+        _min=min;
+        _max=max;
 
     }
-    void update( double min,  double max){
+    void update(){
         double del = -10 + rand() % 20;
         _value += del / 10;
-        if (_value > max)
-            _value = max;
-        else if (_value < min)
-            _value = min;
+        if (_value > _max)
+            _value = _max;
+        else if (_value < _min)
+            _value = _min;
     }
-    double operator()(){
-            return _value;
+        void print(){
+            std::cout<<_value<<std::endl;
         }
 
 };
@@ -30,33 +34,27 @@ public:
 class temp_sens:public pattern{
 private:
 public:
-    const double MIN= -50;
-    const double MAX= 100;
+    static const int MIN= -50;
+    static const int MAX= 100;
     temp_sens():pattern(MIN, MAX){}
-    void temp_update(){
-        update(MIN,MAX);
-    }
+    
 };
 class hum_sens:public pattern{
 private:
 public:
-    const double MIN = 0;
-    const double MAX = 100;
+    static const int  MIN = 0;
+    static const int  MAX = 100;
     hum_sens():pattern(MIN, MAX){}
-    void hum_update(){
-        update(MIN,MAX);
-    }
+    
 
 };
 class pressure_sens:public pattern{
 private:
 public:
-    const double MIN = 600;
-    const double MAX = 900;
+    static const int  MIN = 600;
+    static const int  MAX = 900;
     pressure_sens():pattern(MIN, MAX){}
-    void pressure_update(){
-        update(MIN,MAX);
-    }
+    
 
 
 
@@ -64,33 +62,59 @@ public:
 class co2_sens:public pattern{
 private:
 public:
-    const double MIN = 0;
-    const double MAX = 100;
+    static const int  MIN = 0;
+    static const int  MAX = 100;//статичные поля существуют и до создания класса
     co2_sens():pattern(MIN, MAX){}
-    void co2_update(){
-        update(MIN,MAX);
+    
+
+};
+
+class ATH:public temp_sens, public hum_sens{
+private:
+public:
+void print_temp(){
+    temp_sens::print();
+    }
+
+void hum_temp(){
+    hum_sens::print();
     }
 
 };
 
-class ATH{
+class sensors_handler{
 private:
-    temp_sens _temp;
-    hum_sens _hum;
-
+pattern** _array;
+size_t _size;
+size_t _count;
 public:
-
-double GetTemp(){
-    return _temp();
+sensors_handler(size_t size){
+    _size=size;
+    _array=new pattern*[_size];
+    _count=0;
+    
 }
 
-double GetHum(){
-    return _hum();
+void append_sensor(pattern* x){
+    if(_count<_size){
+    _array[_count]=x;
+    _count++;
+    }
 }
 
-std::tuple<double, double> operator()(){
-    return std::tuple<double, double>(_temp(), _hum());
+void print_sensor(size_t ind){
+    _array[ind]->print();
+
 }
+void print_sensor(){
+    for(size_t i=0;i<_size;i++){
+    _array[i]->print();
+    }
+
+}
+
+
+
 };
 
 
@@ -98,10 +122,17 @@ std::tuple<double, double> operator()(){
 
 int main(){
     srand(time(NULL));
-    temp_sens a=temp_sens();
-    std::cout<<a()<<std::endl;
-    a.temp_update();
-    std::cout<<a()<<std::endl;
+    temp_sens temp=temp_sens();
+    temp.print();
+    hum_sens hum;
+    pressure_sens pressure;
+    co2_sens co2;
+    ATH ath;
+
+    sensors_handler sensors=sensors_handler(5);
+    sensors.append_sensor(&temp);
+
+    sensors.print_sensor(0);   
 
 
 
